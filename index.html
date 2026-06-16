@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ✏️ [수정] 브라우저 탭 제목 -->
+  <title>하늘 카페 | Haneul Café — 函館</title>
+  <meta name="description" content="하코다테에서 가장 포근한 한국식 카페, 하늘(Haneul). 곧 오픈 예정입니다." />
+  <meta property="og:title" content="하늘 카페 | Haneul Café — 函館" />
+  <meta property="og:description" content="函館の空の下、一番あたたかい韓国に出会う場所。" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome 6 (SNS 아이콘 포함) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Google Fonts: Noto Sans KR + Noto Serif KR + Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- =====================================================
+       🎨 Tailwind 컬러 토큰 & 커스텀 설정
+       ✏️ 색상을 바꾸고 싶다면 아래 값만 수정하세요.
+  ====================================================== -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            haneul: {
+              sky:     '#5AABDA',   /* 메인 하늘색 포인트 */
+              skylt:   '#B8DFF8',   /* 연한 하늘 (테두리, 배경) */
+              skypal:  '#E8F4FD',   /* 가장 연한 하늘 (섹션 배경) */
+              cream:   '#F9F6F0',   /* 따뜻한 크림 화이트 */
+              wood:    '#8B6847',   /* 우드톤 강조 */
+              woodlt:  '#C4A882',   /* 연한 우드 */
+              ink:     '#1E2A35',   /* 짙은 차콜 텍스트 */
+              muted:   '#6B7C8D',   /* 보조 텍스트 */
+            }
+          },
+          fontFamily: {
+            display: ['"Noto Serif KR"', 'serif'],
+            body:    ['"Noto Sans KR"', '"Noto Sans JP"', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 2px 20px rgba(90,171,218,0.10), 0 1px 4px rgba(0,0,0,0.06)',
+            'card-hover': '0 8px 40px rgba(90,171,218,0.20), 0 2px 8px rgba(0,0,0,0.08)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ── 전역 기본 ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+      color: #1E2A35;
+      background: #F9F6F0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── 구름 부유 애니메이션 ── */
+    @keyframes cloudDrift {
+      0%,100% { transform: translateX(0px); }
+      50%      { transform: translateX(22px); }
+    }
+    @keyframes cloudDriftSlow {
+      0%,100% { transform: translateX(0px); }
+      50%      { transform: translateX(-18px); }
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(24px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes sunPulse {
+      0%,100% { filter: drop-shadow(0 0 12px rgba(255,210,80,.55)); }
+      50%      { filter: drop-shadow(0 0 28px rgba(255,210,80,.85)); }
+    }
+
+    .cloud-a { animation: cloudDrift 9s ease-in-out infinite; }
+    .cloud-b { animation: cloudDriftSlow 13s ease-in-out infinite; animation-delay: -5s; }
+    .cloud-c { animation: cloudDrift 11s ease-in-out infinite; animation-delay: -3s; }
+    .sun-glow { animation: sunPulse 4s ease-in-out infinite; }
+    .fade-up  { animation: fadeUp .7s ease forwards; }
+    .fade-up-d1 { animation-delay: .15s; opacity:0; }
+    .fade-up-d2 { animation-delay: .3s;  opacity:0; }
+    .fade-up-d3 { animation-delay: .45s; opacity:0; }
+
+    /* ── Hero 그라디언트 하늘 ── */
+    .hero-sky {
+      background: linear-gradient(175deg,
+        #caeaf9 0%,
+        #ddf0fb 30%,
+        #eef6fd 55%,
+        #f5ede0 80%,
+        #f0e4cf 100%
+      );
+    }
+
+    /* ── 헤더 글라스모피즘 ── */
+    .glass-header {
+      background: rgba(249,246,240,.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(184,223,248,.45);
+    }
+
+    /* ── 메뉴 카드 ── */
+    .menu-card {
+      transition: transform .28s cubic-bezier(.34,1.3,.64,1),
+                  box-shadow .28s ease;
+    }
+    .menu-card:hover {
+      transform: translateY(-8px) scale(1.012);
+      box-shadow: 0 16px 48px rgba(90,171,218,.22), 0 4px 12px rgba(0,0,0,.07);
+    }
+
+    /* ── 관광지 카드 수평 스크롤 (CSS scroll-snap) ── */
+    .spots-track {
+      display: flex;
+      gap: 1.25rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: .75rem;
+      scrollbar-width: thin;
+      scrollbar-color: #B8DFF8 transparent;
+    }
+    .spots-track::-webkit-scrollbar { height: 4px; }
+    .spots-track::-webkit-scrollbar-thumb { background: #B8DFF8; border-radius: 9px; }
+    .spot-card {
+      scroll-snap-align: start;
+      flex: 0 0 280px;
+      transition: box-shadow .25s ease;
+    }
+    @media (min-width: 768px) { .spot-card { flex: 0 0 320px; } }
+
+    /* ── 섹션 웨이브 구분선 ── */
+    .wave { display:block; width:100%; overflow:hidden; line-height:0; }
+
+    /* ── 플로팅 라벨 폼 ── */
+    .form-group { position: relative; }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: rgba(232,244,253,.45);
+      border: 1.5px solid #B8DFF8;
+      border-radius: 14px;
+      padding: 1.05rem 1rem .45rem;
+      font-size: .875rem;
+      font-family: inherit;
+      color: #1E2A35;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      outline: none;
+    }
+    .form-group textarea { resize: vertical; min-height: 110px; padding-top: 1.4rem; }
+    .form-group select   { padding-top: 1.05rem; appearance: none; cursor: pointer; }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: #5AABDA;
+      background: #fff;
+      box-shadow: 0 0 0 3.5px rgba(90,171,218,.18);
+    }
+    .form-label {
+      position: absolute;
+      top: .85rem; left: 1rem;
+      font-size: .78rem;
+      color: #6B7C8D;
+      pointer-events: none;
+      transition: .18s ease;
+    }
+    .form-group input:focus ~ .form-label,
+    .form-group input:not(:placeholder-shown) ~ .form-label,
+    .form-group textarea:focus ~ .form-label,
+    .form-group textarea:not(:placeholder-shown) ~ .form-label,
+    .form-group select:focus ~ .form-label {
+      top: .28rem;
+      font-size: .67rem;
+      color: #5AABDA;
+      font-weight: 500;
+    }
+
+    /* ── SNS 아이콘 버튼 공통 ── */
+    .sns-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      font-size: 1.05rem;
+      transition: background .22s, color .22s, transform .22s;
+    }
+    .sns-btn:hover { transform: scale(1.12); }
+
+    /* 헤더용 (밝은 배경) */
+    .sns-header { background: rgba(90,171,218,.1); color: #5AABDA; }
+    .sns-header:hover { background: #5AABDA; color: #fff; }
+
+    /* 푸터용 (어두운 배경) */
+    .sns-footer { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
+    .sns-footer:hover { background: #5AABDA; color: #fff; }
+
+    /* ── 뱃지 ── */
+    .badge-sky {
+      display: inline-block;
+      background: rgba(90,171,218,.12);
+      color: #3A8BBF;
+      font-size: .68rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: .3rem 1rem;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+
+    /* ── 버튼 ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: #5AABDA;
+      color: #fff;
+      font-weight: 600;
+      padding: .8rem 1.8rem;
+      border-radius: 999px;
+      transition: background .2s, box-shadow .2s, transform .18s;
+      font-size: .875rem;
+    }
+    .btn-primary:hover {
+      background: #3A8BBF;
+      box-shadow: 0 6px 24px rgba(90,171,218,.38);
+      transform: translateY(-1px);
+    }
+    .btn-wood {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(139,104,71,.10);
+      color: #8B6847;
+      font-weight: 600;
+      padding: .65rem 1.4rem;
+      border-radius: 999px;
+      transition: background .2s;
+      font-size: .82rem;
+    }
+    .btn-wood:hover { background: rgba(139,104,71,.18); }
+
+    /* ── 가격 뱃지 ── */
+    .price-tag {
+      background: #E8F4FD;
+      color: #3A8BBF;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: .2rem .65rem;
+      border-radius: 8px;
+    }
+
+    /* ── 섹션 타이틀 공통 ── */
+    .section-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      color: #1E2A35;
+      line-height: 1.35;
+    }
+
+    /* ── 풀 폭 구분 ── */
+    .divider-wood {
+      width: 40px; height: 3px;
+      background: linear-gradient(90deg, #C4A882, #8B6847);
+      border-radius: 99px;
+      margin: .75rem auto 0;
+    }
+
+    /* 스크롤 도우미 힌트 */
+    .scroll-hint {
+      font-size: .72rem;
+      color: #6B7C8D;
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+    }
+
+    /* 푸터 배경 */
+    .footer-bg {
+      background: linear-gradient(165deg, #1E2A35 0%, #162230 100%);
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ==============================================================
+     1. 헤더 (Header)
+     ✏️ 로고 텍스트, SNS 링크를 여기서 수정하세요.
+     ✏️ 메뉴 링크(#hero, #menu 등) 는 각 섹션의 id와 맞춰져 있어요.
+============================================================== -->
+<header class="glass-header fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+
+    <!-- 로고 -->
+    <a href="#hero" class="flex items-center gap-2.5 flex-shrink-0">
+      <!-- ✏️ 로고 SVG: 나중에 실제 로고 이미지가 생기면 <img src="logo.png"> 로 교체하세요 -->
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="19" fill="#D9EEFC"/>
+        <!-- 태양 -->
+        <circle cx="27" cy="11" r="5" fill="#FFD84D" class="sun-glow"/>
+        <line x1="27" y1="5" x2="27" y2="3" stroke="#FFD84D" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="31.5" y1="6.5" x2="33" y2="5" stroke="#FFD84D" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="33" y1="11" x2="35" y2="11" stroke="#FFD84D" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 구름 -->
+        <ellipse cx="14" cy="23" rx="6" ry="3.8" fill="white" opacity=".95"/>
+        <ellipse cx="19.5" cy="20.5" rx="7.5" ry="4.5" fill="white"/>
+        <ellipse cx="25.5" cy="23" rx="5.5" ry="3.5" fill="white" opacity=".9"/>
+        <!-- 산 실루엣 -->
+        <path d="M5 31 L13 20 L21 31 Z" fill="#B8DFF8" opacity=".4"/>
+        <path d="M14 31 L22 22 L30 31 Z" fill="#B8DFF8" opacity=".3"/>
+      </svg>
+      <div>
+        <div class="font-display font-bold text-lg text-haneul-sky leading-none">하늘</div>
+        <div class="text-haneul-muted text-[10px] tracking-[.18em] font-body font-light leading-none mt-0.5">HANEUL CAFÉ</div>
+      </div>
+    </a>
+
+    <!-- 데스크탑 내비 + SNS + 언어 -->
+    <div class="flex items-center gap-3 sm:gap-5">
+
+      <!-- 내비 링크 (모바일에서 숨김) -->
+      <nav class="hidden md:flex items-center gap-5 text-sm font-medium text-haneul-muted">
+        <a href="#menu"     class="hover:text-haneul-sky transition-colors">메뉴</a>
+        <a href="#hakodate" class="hover:text-haneul-sky transition-colors">하코다테</a>
+        <a href="#contact"  class="hover:text-haneul-sky transition-colors">파트너 문의</a>
+      </nav>
+
+      <!-- SNS 아이콘 (헤더) -->
+      <!-- 💡 [SNS 링크] 계정 개설 후 아래 href="" 안에 실제 URL을 넣으세요 -->
+      <div class="flex items-center gap-1.5">
+        <a href=""
+           target="_blank" rel="noopener noreferrer"
+           class="sns-btn sns-header" aria-label="Instagram">
+          <!-- 인스타그램 -->
+          <i class="fa-brands fa-instagram"></i>
+        </a>
+        <a href=""
+           target="_blank" rel="noopener noreferrer"
+           class="sns-btn sns-header" aria-label="Threads">
+          <!-- 스레드 -->
+          <i class="fa-brands fa-threads"></i>
+        </a>
+        <a href=""
+           target="_blank" rel="noopener noreferrer"
+           class="sns-btn sns-header" aria-label="X (Twitter)">
+          <!-- X(트위터) -->
+          <i class="fa-brands fa-x-twitter"></i>
+        </a>
+      </div>
+
+      <!-- 언어 선택 -->
+      <!-- ✏️ 실제 언어 전환 기능을 붙이려면 JS를 추가하세요. 현재는 디자인 구현입니다. -->
+      <div class="flex items-center rounded-full border border-haneul-skylt overflow-hidden text-xs font-medium">
+        <button class="px-3 py-1.5 bg-haneul-sky text-white">KR</button>
+        <button class="px-3 py-1.5 text-haneul-sky hover:bg-haneul-skypal transition-colors">JP</button>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+
+<!-- ==============================================================
+     2. 메인 비주얼 (Hero Section)
+     ✏️ 메인 카피, 빌드업 문구를 여기서 수정하세요.
+============================================================== -->
+<section id="hero" class="hero-sky relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-20 px-4">
+
+  <!-- 배경 구름 레이어 -->
+  <svg class="cloud-a absolute top-16 left-0 w-56 md:w-80 opacity-70 pointer-events-none" viewBox="0 0 180 80" fill="none">
+    <ellipse cx="60" cy="55" rx="30" ry="18" fill="white"/>
+    <ellipse cx="90" cy="44" rx="38" ry="22" fill="white"/>
+    <ellipse cx="125" cy="55" rx="26" ry="16" fill="white"/>
+  </svg>
+  <svg class="cloud-b absolute top-32 right-4 w-44 md:w-64 opacity-55 pointer-events-none" viewBox="0 0 150 65" fill="none">
+    <ellipse cx="48" cy="44" rx="24" ry="14" fill="white"/>
+    <ellipse cx="76" cy="35" rx="32" ry="18" fill="white"/>
+    <ellipse cx="108" cy="44" rx="22" ry="13" fill="white"/>
+  </svg>
+  <svg class="cloud-c absolute bottom-32 left-1/4 w-36 md:w-52 opacity-45 pointer-events-none" viewBox="0 0 140 60" fill="none">
+    <ellipse cx="44" cy="40" rx="22" ry="13" fill="white"/>
+    <ellipse cx="70" cy="32" rx="28" ry="16" fill="white"/>
+    <ellipse cx="100" cy="40" rx="20" ry="12" fill="white"/>
+  </svg>
+
+  <!-- 하단 산 실루엣 파노라마 -->
+  <svg class="absolute bottom-0 left-0 right-0 w-full pointer-events-none" viewBox="0 0 1440 200" preserveAspectRatio="none" fill="none">
+    <path d="M0 200 L0 140 L160 60 L320 140 L500 80 L680 160 L820 100 L960 155 L1100 90 L1260 150 L1440 110 L1440 200 Z" fill="#C7E4F5" opacity=".35"/>
+    <path d="M0 200 L0 160 L200 100 L380 165 L560 120 L740 170 L900 130 L1060 175 L1220 135 L1440 155 L1440 200 Z" fill="#D9EEFC" opacity=".5"/>
+    <path d="M0 200 L0 185 L240 145 L480 190 L720 155 L960 190 L1200 160 L1440 178 L1440 200 Z" fill="#EBF5FD" opacity=".65"/>
+    <path d="M0 200 L1440 200 L1440 195 L0 195 Z" fill="#F9F6F0"/>
+  </svg>
+
+  <!-- 콘텐츠 -->
+  <div class="relative z-10 text-center max-w-2xl mx-auto">
+
+    <span class="badge-sky fade-up">Coming Soon · 近日オープン ☁️</span>
+
+    <h1 class="font-display font-bold text-haneul-sky mt-5 mb-1 fade-up fade-up-d1"
+        style="font-size: clamp(3.5rem,12vw,6rem); line-height:1; letter-spacing:-.02em;">
+      하늘
+    </h1>
+    <p class="text-haneul-sky/60 tracking-[.28em] text-sm md:text-base mb-6 fade-up fade-up-d1 font-body">
+      Haneul Café · はぬるカフェ · 函館
+    </p>
+
+    <!-- ✏️ 메인 카피 -->
+    <p class="font-display text-xl md:text-2xl text-haneul-ink/80 leading-relaxed mb-2 fade-up fade-up-d2">
+      하코다테의 하늘 아래,<br/>
+      <span class="text-haneul-sky font-bold">가장 포근한 한국</span>을 만나는 공간.
+    </p>
+    <p class="text-haneul-muted text-sm leading-loose mb-9 fade-up fade-up-d2">
+      函館の空の下、一番あたたかい韓国に出会う場所。
+    </p>
+
+    <!-- 빌드업 카드 -->
+    <!-- ✏️ 오픈 예정 문구 -->
+    <div class="fade-up fade-up-d3 bg-white/72 backdrop-blur-sm border border-haneul-skylt/60 rounded-2xl px-6 py-5 text-left max-w-md mx-auto shadow-card mb-8">
+      <div class="flex gap-3">
+        <span class="text-2xl flex-shrink-0 mt-0.5">☀️</span>
+        <div>
+          <p class="font-display font-semibold text-haneul-ink text-sm mb-1">
+            오픈 준비 중 · 準備中
+          </p>
+          <p class="text-haneul-muted text-xs leading-relaxed">
+            현재 하코다테에서 화창하게 준비 중입니다.<br/>
+            <strong class="text-haneul-ink/80">오픈 예정지와 일정은 곧 공개</strong>됩니다!
+          </p>
+          <p class="text-haneul-muted/60 text-xs mt-1.5">
+            現在、函館でオープンに向け鋭意準備中です。場所と日程は近日公開予定！
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <a href="#contact" class="btn-primary fade-up fade-up-d3">
+      <i class="fa-regular fa-bell text-sm"></i>
+      소식 먼저 받기 · 最新情報を受け取る
+    </a>
+
+  </div>
+</section>
+
+
+<!-- 섹션 웨이브 전환 -->
+<svg class="wave -mt-px" viewBox="0 0 1440 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 56 C360 0 1080 0 1440 56 L1440 0 L0 0 Z" fill="#F9F6F0"/>
+</svg>
+
+
+<!-- ==============================================================
+     3. 시그니처 메뉴판 (Menu Section)
+     ✏️ 메뉴 카드를 추가/삭제/수정하려면 아래 주석을 참고하세요.
+============================================================== -->
+<section id="menu" class="bg-haneul-cream py-20 px-4">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- 섹션 헤더 -->
+    <div class="text-center mb-14">
+      <span class="badge-sky">Signature Menu · シグニチャーメニュー</span>
+      <h2 class="section-title mt-4 mb-2">시그니처 메뉴</h2>
+      <div class="divider-wood"></div>
+      <p class="text-haneul-muted text-sm mt-4">하늘 카페가 자신 있게 선보이는 대표 메뉴입니다.</p>
+    </div>
+
+    <!-- ━━━ 커피 카테고리 ━━━ -->
+    <div class="flex items-center gap-3 mb-6">
+      <span class="font-display font-semibold text-haneul-wood text-base">☕ 커피 · コーヒー</span>
+      <div class="flex-1 h-px bg-haneul-woodlt/30"></div>
+    </div>
+
+    <!-- 커피 그리드 -->
+    <!--
+    ╔══════════════════════════════════════════════════════╗
+    ║  ✏️ 메뉴 카드 추가 방법                              ║
+    ║  아래 블록 하나를 복사해서 끝에 붙여 넣고            ║
+    ║  이름, 일본어이름, 가격, 설명 텍스트만 바꾸세요.     ║
+    ║  이모지는 메뉴 분위기에 맞게 자유롭게 바꿔도 돼요.   ║
+    ╚══════════════════════════════════════════════════════╝
+    -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
+
+      <!-- ── 메뉴 카드: 아메리카노 ── -->
+      <div class="menu-card bg-white rounded-2xl overflow-hidden border border-haneul-skylt/25 shadow-card">
+        <!-- ✏️ 메뉴 이미지: 아래 div를 <img src="사진.jpg" alt="아메리카노" class="w-full h-48 object-cover"> 로 교체하세요 -->
+        <div class="w-full h-48 bg-gradient-to-br from-[#d4edf8] to-[#edf6fb] flex items-center justify-center">
+          <span class="text-6xl">☕</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h3 class="font-display font-bold text-haneul-ink text-base leading-tight">아메리카노</h3>
+              <p class="text-haneul-muted text-xs mt-0.5">アメリカーノ</p>
+            </div>
+            <span class="price-tag flex-shrink-0">¥ 480</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed">
+            하늘처럼 맑고 깔끔한 에스프레소 베이스. 하코다테의 신선한 아침과 가장 잘 어울립니다.
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 아메리카노 ── -->
+
+      <!-- ── 메뉴 카드: 달고나 커피 ── -->
+      <div class="menu-card bg-white rounded-2xl overflow-hidden border border-haneul-skylt/25 shadow-card">
+        <div class="w-full h-48 bg-gradient-to-br from-[#fdf2d8] to-[#fbecc4] flex items-center justify-center">
+          <span class="text-6xl">🍯</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h3 class="font-display font-bold text-haneul-ink text-base leading-tight">달고나 커피</h3>
+              <p class="text-haneul-muted text-xs mt-0.5">タルゴナコーヒー</p>
+            </div>
+            <span class="price-tag flex-shrink-0">¥ 650</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed">
+            SNS를 뜨겁게 달군 한국의 시그니처 커피. 폭신한 달고나 폼이 우유 위에 사르르 녹아듭니다.
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 달고나 커피 ── -->
+
+      <!-- ── 메뉴 카드: 스위트 밀크 커피 ── -->
+      <div class="menu-card bg-white rounded-2xl overflow-hidden border border-haneul-skylt/25 shadow-card">
+        <div class="w-full h-48 bg-gradient-to-br from-[#ddf0fb] to-[#c4e4f6] flex items-center justify-center">
+          <span class="text-6xl">🥛</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h3 class="font-display font-bold text-haneul-ink text-base leading-tight">스위트 밀크 커피</h3>
+              <p class="text-haneul-muted text-xs mt-0.5">スイートミルクコーヒー</p>
+            </div>
+            <span class="price-tag flex-shrink-0">¥ 580</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed">
+            연유로 달콤하게 마무리한 한국식 밀크커피. 포근하고 부드러운 한 모금이 하루를 따뜻하게 합니다.
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 스위트 밀크 커피 ── -->
+
+    </div><!-- 커피 그리드 끝 -->
+
+
+    <!-- ━━━ 디저트 카테고리 ━━━ -->
+    <div class="flex items-center gap-3 mb-6">
+      <span class="font-display font-semibold text-haneul-wood text-base">🍞 디저트 · デザート</span>
+      <div class="flex-1 h-px bg-haneul-woodlt/30"></div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto mb-12">
+
+      <!-- ── 메뉴 카드: 소금빵 ── -->
+      <div class="menu-card bg-white rounded-2xl overflow-hidden border border-haneul-skylt/25 shadow-card">
+        <div class="w-full h-48 bg-gradient-to-br from-[#fdf4e3] to-[#fae8c5] flex items-center justify-center">
+          <span class="text-6xl">🥐</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h3 class="font-display font-bold text-haneul-ink text-base leading-tight">소금빵</h3>
+              <p class="text-haneul-muted text-xs mt-0.5">塩パン</p>
+            </div>
+            <span class="price-tag flex-shrink-0">¥ 280</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed">
+            바삭한 겉껍질과 촉촉한 속살. 버터 향과 은은한 소금의 조화가 커피와 완벽하게 어울립니다.
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 소금빵 ── -->
+
+      <!-- ── 메뉴 카드: 치즈케이크 ── -->
+      <div class="menu-card bg-white rounded-2xl overflow-hidden border border-haneul-skylt/25 shadow-card">
+        <div class="w-full h-48 bg-gradient-to-br from-[#fdf8e3] to-[#f8f0c4] flex items-center justify-center">
+          <span class="text-6xl">🍰</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h3 class="font-display font-bold text-haneul-ink text-base leading-tight">치즈케이크</h3>
+              <p class="text-haneul-muted text-xs mt-0.5">チーズケーキ</p>
+            </div>
+            <span class="price-tag flex-shrink-0">¥ 520</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed">
+            입에서 사르르 녹는 한국식 수플레 치즈케이크. 달고나 커피와 페어링하면 환상적인 조합입니다.
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 치즈케이크 ── -->
+
+    </div><!-- 디저트 그리드 끝 -->
+
+    <!-- 메뉴 하단 안내 -->
+    <div class="bg-haneul-skypal/60 border border-haneul-skylt/40 rounded-2xl p-6 text-center max-w-lg mx-auto">
+      <p class="font-display text-haneul-ink/75 text-sm leading-relaxed">
+        하늘 카페는 계절과 트렌드에 맞춰<br/>
+        더 맛있는 한국식 디저트를 지속적으로 연구하고 업데이트합니다. 🌿
+      </p>
+      <p class="text-haneul-muted text-xs mt-2.5">
+        はぬるカフェは季節とトレンドに合わせて、より美味しい韓国式デザートを研究・更新し続けます。
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- 섹션 웨이브 전환 -->
+<svg class="wave" viewBox="0 0 1440 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0 C360 56 1080 56 1440 0 L1440 56 L0 56 Z" fill="#F9F6F0"/>
+  <path d="M0 0 C360 28 1080 28 1440 0" fill="none" stroke="#B8DFF8" stroke-width="1"/>
+</svg>
+
+
+<!-- ==============================================================
+     4. 하코다테 관광지 가이드 (With Hakodate Section)
+     ✏️ 관광지 카드를 추가/수정하려면 spot-card 블록을 복사하세요.
+============================================================== -->
+<section id="hakodate" class="bg-haneul-skypal/40 py-20 px-4">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- 섹션 헤더 -->
+    <div class="text-center mb-12">
+      <span class="badge-sky">With Hakodate · 函館と歩く</span>
+      <h2 class="section-title mt-4 mb-2">
+        왜 하코다테 여행 중에<br class="sm:hidden"/> '하늘'에 와야 할까요?
+      </h2>
+      <div class="divider-wood"></div>
+      <p class="text-haneul-muted text-sm mt-4 max-w-lg mx-auto leading-relaxed">
+        모토마치 언덕부터 야경 명소까지 — 여행의 동선에 하늘 카페를 더하면 더 특별한 하코다테가 됩니다.
+      </p>
+    </div>
+
+    <!-- 스크롤 힌트 (모바일) -->
+    <div class="flex justify-end mb-3 md:hidden">
+      <span class="scroll-hint">
+        <i class="fa-solid fa-angles-right text-haneul-skylt"></i>
+        옆으로 스와이프 · スワイプ
+      </span>
+    </div>
+
+    <!-- 관광지 카드 (수평 스크롤 슬라이더) -->
+    <!--
+    ╔═════════════════════════════════════════════════════╗
+    ║ ✏️ 관광지 카드 추가 방법                            ║
+    ║ spot-card div 블록 하나를 복사해서 붙여 넣고        ║
+    ║ 아이콘, 이름, 설명, 태그 텍스트만 수정하세요.       ║
+    ╚═════════════════════════════════════════════════════╝
+    -->
+    <div class="spots-track pb-4">
+
+      <!-- ── 관광지 카드 1: 모토마치 언덕길 ── -->
+      <div class="spot-card bg-white rounded-2xl overflow-hidden shadow-card border border-haneul-skylt/25">
+        <!-- ✏️ 이미지: <img src="motomachi.jpg" alt="모토마치" class="w-full h-44 object-cover"> 로 교체 가능 -->
+        <div class="w-full h-44 bg-gradient-to-br from-[#d4edf8] to-[#b8dff8] flex flex-col items-center justify-center gap-1">
+          <span class="text-5xl">⛪</span>
+          <span class="text-haneul-sky text-xs font-medium tracking-wider mt-1">元町 · 모토마치</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-display font-bold text-haneul-ink text-sm leading-snug">
+              모토마치 언덕길
+            </h3>
+            <span class="text-[10px] bg-haneul-skypal text-haneul-sky px-2 py-0.5 rounded-full flex-shrink-0 font-medium">도보 관광</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed mb-3">
+            교회와 서양식 건물이 어우러진 포근한 산책로. 산책 후 하늘 카페에서 시원한 에이드 한 잔 어떠세요?
+          </p>
+          <p class="text-haneul-muted/60 text-[11px] leading-relaxed border-t border-haneul-skylt/30 pt-3">
+            教会や洋風建物が調和した温かみある坂道。散策後は「はぬる」カフェで一息。
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 모토마치 ── -->
+
+      <!-- ── 관광지 카드 2: 가네모리 붉은 벽돌 창고 ── -->
+      <div class="spot-card bg-white rounded-2xl overflow-hidden shadow-card border border-haneul-skylt/25">
+        <div class="w-full h-44 bg-gradient-to-br from-[#f8e8d8] to-[#f0d0b8] flex flex-col items-center justify-center gap-1">
+          <span class="text-5xl">🧱</span>
+          <span class="text-haneul-wood text-xs font-medium tracking-wider mt-1">金森赤レンガ · 가네모리</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-display font-bold text-haneul-ink text-sm leading-snug">
+              가네모리 붉은 벽돌 창고
+            </h3>
+            <span class="text-[10px] bg-orange-50 text-orange-400 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">쇼핑</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed mb-3">
+            바다를 보며 쇼핑을 즐기는 하코다테 필수 코스. 베이 에어리어와 가장 가까운 한국식 휴식처.
+          </p>
+          <p class="text-haneul-muted/60 text-[11px] leading-relaxed border-t border-haneul-skylt/30 pt-3">
+            海を眺めながらショッピングを楽しめる函館の定番スポット。ベイエリア最近の韓国式休憩所。
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 가네모리 ── -->
+
+      <!-- ── 관광지 카드 3: 하코다테산 로프웨이 야경 ── -->
+      <div class="spot-card bg-white rounded-2xl overflow-hidden shadow-card border border-haneul-skylt/25">
+        <div class="w-full h-44 bg-gradient-to-br from-[#1e2a45] to-[#2a3d6b] flex flex-col items-center justify-center gap-1 relative overflow-hidden">
+          <!-- 별 장식 -->
+          <div class="absolute inset-0 flex flex-wrap content-start pt-3 pl-2 gap-x-6 gap-y-4 opacity-60">
+            <span class="text-yellow-200 text-xs">✦</span><span class="text-yellow-100 text-[8px]">✦</span>
+            <span class="text-white text-[10px]">✦</span><span class="text-yellow-200 text-[7px]">✦</span>
+            <span class="text-yellow-100 text-xs">✦</span><span class="text-white text-[8px]">✦</span>
+          </div>
+          <span class="text-5xl relative z-10">🌃</span>
+          <span class="text-yellow-200 text-xs font-medium tracking-wider mt-1 relative z-10">函館山夜景 · 야경</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-display font-bold text-haneul-ink text-sm leading-snug">
+              하코다테산 로프웨이 야경
+            </h3>
+            <span class="text-[10px] bg-indigo-50 text-indigo-400 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">야경 명소</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed mb-3">
+            세계적인 야경을 감상하기 전, 달콤한 달고나 커피로 설렘을 충전하는 시간.
+          </p>
+          <p class="text-haneul-muted/60 text-[11px] leading-relaxed border-t border-haneul-skylt/30 pt-3">
+            世界三大夜景を楽しむ前に、甘いタルゴナコーヒーで心を弾ませて。
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 야경 ── -->
+
+      <!-- ── 관광지 카드 4: 고료카쿠 공원 ── -->
+      <div class="spot-card bg-white rounded-2xl overflow-hidden shadow-card border border-haneul-skylt/25">
+        <div class="w-full h-44 bg-gradient-to-br from-[#d4edd4] to-[#b8e0b8] flex flex-col items-center justify-center gap-1">
+          <span class="text-5xl">⭐</span>
+          <span class="text-green-600 text-xs font-medium tracking-wider mt-1">五稜郭 · 고료카쿠</span>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-display font-bold text-haneul-ink text-sm leading-snug">
+              고료카쿠 공원
+            </h3>
+            <span class="text-[10px] bg-green-50 text-green-500 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">사계절 명소</span>
+          </div>
+          <p class="text-haneul-muted text-xs leading-relaxed mb-3">
+            별 모양의 아름다운 성곽 정원. 사계절의 하늘을 만끽하고 하늘 카페로 이어지는 완벽한 동선.
+          </p>
+          <p class="text-haneul-muted/60 text-[11px] leading-relaxed border-t border-haneul-skylt/30 pt-3">
+            星形の美しい城郭庭園。四季の空を満喫した後は「はぬる」カフェへ、完璧な散策コース。
+          </p>
+        </div>
+      </div>
+      <!-- ── 카드 끝: 고료카쿠 ── -->
+
+    </div><!-- spots-track 끝 -->
+
+    <!-- 제휴 안내 배너 -->
+    <div class="mt-10 bg-white rounded-2xl p-6 md:p-8 border border-haneul-skylt/30 shadow-card">
+      <div class="flex flex-col md:flex-row items-start md:items-center gap-5">
+        <div class="w-12 h-12 bg-haneul-wood/10 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl">
+          🤝
+        </div>
+        <div class="flex-1">
+          <h3 class="font-display font-bold text-haneul-ink text-base mb-1.5">로컬과 함께하는 하늘 카페</h3>
+          <p class="text-haneul-muted text-sm leading-relaxed">
+            하코다테 로컬 자영업자분들과 상생합니다. 카페 주변 소품샵, 맛집들과 협력해 <strong class="text-haneul-ink/80">손님들만을 위한 특별한 로컬 혜택</strong>을 제공합니다.
+          </p>
+          <p class="text-haneul-muted/55 text-xs mt-1.5">
+            函館のローカル事業者と共に歩みます。「はぬる」周辺の素敵なお店と連携し、お客様だけの特別な特典をご提供します。
+          </p>
+        </div>
+        <a href="#contact" class="btn-wood flex-shrink-0">
+          파트너 문의 <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- 섹션 웨이브 전환 -->
+<svg class="wave" viewBox="0 0 1440 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 56 C360 0 1080 0 1440 56 L1440 0 L0 0 Z" fill="#F9F6F0"/>
+</svg>
+
+
+<!-- ==============================================================
+     5. 파트너 소집 & 컨택 폼 (Contact Section)
+     ✏️ 폼 수신 기능: Formspree(https://formspree.io) 무료 계정 생성 후
+        <form> 태그의 action="" 에 발급받은 URL 넣으면 이메일로 수신돼요.
+        예) action="https://formspree.io/f/abcdefgh"
+============================================================== -->
+<section id="contact" class="bg-haneul-cream py-20 px-4">
+  <div class="max-w-2xl mx-auto">
+
+    <!-- 섹션 헤더 -->
+    <div class="text-center mb-12">
+      <span class="badge-sky">Partner & Contact · パートナー募集</span>
+      <h2 class="section-title mt-4 mb-2">
+        하늘과 함께 하코다테를<br/>빛낼 파트너를 모십니다
+      </h2>
+      <div class="divider-wood"></div>
+      <p class="text-haneul-muted text-sm mt-4 leading-relaxed">
+        하늘 카페와 함께 시너지를 내고 싶은 하코다테 내 자영업자 분들의<br/>
+        <strong class="text-haneul-ink/80">홍보 제휴 문의</strong>를 기다립니다. 😊
+      </p>
+      <p class="text-haneul-muted/50 text-xs mt-2">
+        はぬるカフェと共にシナジーを生み出したい函館の事業者様のご連絡をお待ちしております。
+      </p>
+    </div>
+
+    <!-- 컨택 폼 -->
+    <!-- ✏️ 폼 데이터를 이메일로 받으려면: action="https://formspree.io/f/YOUR_FORM_ID" method="POST" 추가 -->
+    <form class="bg-white rounded-3xl p-7 md:p-10 shadow-card border border-haneul-skylt/25 space-y-5">
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+        <!-- 이름 -->
+        <div class="form-group">
+          <input id="f-name" name="name" type="text" placeholder=" " required />
+          <label class="form-label" for="f-name">이름 / お名前 <span class="text-haneul-sky">*</span></label>
+        </div>
+
+        <!-- 연락처 -->
+        <div class="form-group">
+          <input id="f-contact" name="contact" type="text" placeholder=" " required />
+          <label class="form-label" for="f-contact">연락처 / 連絡先 <span class="text-haneul-sky">*</span></label>
+        </div>
+
+      </div>
+
+      <!-- 업종 / 상호 -->
+      <div class="form-group">
+        <input id="f-biz" name="business" type="text" placeholder=" " />
+        <label class="form-label" for="f-biz">업종 · 상호명 / 業種 · 店舗名</label>
+      </div>
+
+      <!-- 제휴 유형 선택 -->
+      <div class="form-group">
+        <select id="f-type" name="type">
+          <option value="" disabled selected></option>
+          <option value="collab">상호 홍보 제휴 / 相互PR提携</option>
+          <option value="coupon">쿠폰·혜택 연계 / クーポン連携</option>
+          <option value="event">공동 이벤트 / 共同イベント</option>
+          <option value="other">기타 / その他</option>
+        </select>
+        <label class="form-label" for="f-type">제휴 유형 / 提携の種類 <span class="text-haneul-sky">*</span></label>
+      </div>
+
+      <!-- 문의 내용 -->
+      <div class="form-group">
+        <textarea id="f-msg" name="message" placeholder=" " required></textarea>
+        <label class="form-label" for="f-msg">문의 내용 / お問い合わせ内容 <span class="text-haneul-sky">*</span></label>
+      </div>
+
+      <!-- 전송 버튼 -->
+      <button type="submit" class="btn-primary w-full justify-center text-base py-3.5">
+        <i class="fa-solid fa-paper-plane"></i>
+        문의 보내기 · 送信する
+      </button>
+
+      <p class="text-haneul-muted/50 text-[11px] text-center">
+        내용 확인 후 빠르게 연락 드리겠습니다. · 確認次第、速やかにご連絡いたします。
+      </p>
+
+    </form>
+
+  </div>
+</section>
+
+
+<!-- ==============================================================
+     6. 푸터 (Footer)
+     ✏️ SNS 링크, 카피라이트 텍스트를 여기서 수정하세요.
+============================================================== -->
+<footer class="footer-bg text-white/65 pt-14 pb-8 px-4">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- 상단: 로고 + 내비 + SNS -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-10">
+
+      <!-- 푸터 로고 & 소개 -->
+      <div class="max-w-xs">
+        <div class="flex items-center gap-2.5 mb-3">
+          <svg width="34" height="34" viewBox="0 0 38 38" fill="none">
+            <circle cx="19" cy="19" r="19" fill="rgba(90,171,218,.2)"/>
+            <circle cx="27" cy="11" r="5" fill="#FFD84D" opacity=".6"/>
+            <ellipse cx="14" cy="23" rx="6" ry="3.8" fill="white" opacity=".55"/>
+            <ellipse cx="19.5" cy="20.5" rx="7.5" ry="4.5" fill="white" opacity=".7"/>
+            <ellipse cx="25.5" cy="23" rx="5.5" ry="3.5" fill="white" opacity=".55"/>
+          </svg>
+          <div>
+            <div class="font-display font-bold text-white text-base leading-none">하늘</div>
+            <div class="text-white/40 text-[10px] tracking-[.16em] leading-none mt-0.5">HANEUL CAFÉ · 函館</div>
+          </div>
+        </div>
+        <p class="text-white/40 text-xs leading-relaxed">
+          하코다테에서 가장 포근한 한국식 카페.<br/>
+          函館で一番あたたかい韓国式カフェ。
+        </p>
+      </div>
+
+      <!-- 빠른 링크 (데스크탑) -->
+      <nav class="hidden md:flex flex-col gap-2 text-sm">
+        <p class="text-white/30 text-[10px] tracking-widest uppercase mb-1">Navigation</p>
+        <a href="#menu"     class="hover:text-white transition-colors">메뉴 / メニュー</a>
+        <a href="#hakodate" class="hover:text-white transition-colors">하코다테 가이드 / 函館ガイド</a>
+        <a href="#contact"  class="hover:text-white transition-colors">파트너 문의 / お問い合わせ</a>
+      </nav>
+
+      <!-- SNS 아이콘 (푸터) -->
+      <div>
+        <p class="text-white/30 text-[10px] tracking-widest uppercase mb-3">Follow Us</p>
+        <div class="flex items-center gap-2.5">
+
+          <!-- 💡 [SNS 링크] 계정 개설 후 아래 href="" 안에 실제 URL을 넣으세요 -->
+
+          <!-- 인스타그램 -->
+          <a href=""
+             target="_blank" rel="noopener noreferrer"
+             class="sns-btn sns-footer" aria-label="Instagram">
+            <i class="fa-brands fa-instagram"></i>
+          </a>
+
+          <!-- 스레드 -->
+          <a href=""
+             target="_blank" rel="noopener noreferrer"
+             class="sns-btn sns-footer" aria-label="Threads">
+            <i class="fa-brands fa-threads"></i>
+          </a>
+
+          <!-- X(트위터) -->
+          <a href=""
+             target="_blank" rel="noopener noreferrer"
+             class="sns-btn sns-footer" aria-label="X (Twitter)">
+            <i class="fa-brands fa-x-twitter"></i>
+          </a>
+
+        </div>
+        <!-- 계정 미개설 안내 (계정 개설 후 이 줄을 삭제하세요) -->
+        <p class="text-white/25 text-[10px] mt-2">※ 계정 개설 후 링크를 연결 예정입니다.</p>
+      </div>
+
+    </div>
+
+    <!-- 구분선 -->
+    <div class="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/25">
+      <!-- ✏️ 연도와 이름 수정 -->
+      <p>© 2025 하늘 (Haneul) Café, Hakodate. All rights reserved.</p>
+      <p class="flex items-center gap-1.5">
+        <span>Crafted with</span>
+        <span class="text-haneul-sky">☁️</span>
+        <span>&</span>
+        <span class="text-red-400">❤️</span>
+        <span>in 函館</span>
+      </p>
+    </div>
+
+  </div>
+</footer>
+
+</body>
+</html>
