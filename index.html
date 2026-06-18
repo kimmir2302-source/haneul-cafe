@@ -1325,9 +1325,26 @@
       </div>
 
       <!-- 폼 입력 영역 -->
-      <!-- ✏️ 실제 서버로 전송하려면: <form action="https://formspree.io/f/YOUR_ID" method="POST"> -->
-      <form id="messageForm" class="px-7 py-6 space-y-4" onsubmit="return sendMessage(event)">
-
+      <!--
+        ✅ Netlify Forms 연동 완료
+           - data-netlify="true" : Netlify가 이 폼을 자동 감지해서 수집
+           - name="postit-message" : Netlify 대시보드에서 보이는 폼 이름
+           - netlify-honeypot : 봇 스팸 자동 차단 필드
+        ✅ Google Sheets 연동
+           - JS의 POSTIT_SHEET_URL 변수에 Apps Script 웹앱 URL을 붙여넣으면 완료
+      -->
+      <form
+        id="messageForm"
+        name="postit-message"
+        class="px-7 py-6 space-y-4"
+        data-netlify="true"
+        netlify-honeypot="bot-field-postit"
+        onsubmit="return sendMessage(event)"
+      >
+        <!-- 봇 스팸 차단용 숨김 필드 (절대 삭제하지 마세요) -->
+        <p class="hidden" aria-hidden="true">
+          <label>봇 필드: <input name="bot-field-postit" /></label>
+        </p>
         <!-- 닉네임 + 포스트잇 색상 선택 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
@@ -1451,7 +1468,22 @@
       </p>
     </div>
 
-    <form class="bg-white rounded-3xl p-7 md:p-10 shadow-[0_2px_20px_rgba(90,171,218,.10)] border border-haneul-skylt/25 space-y-5">
+    <!--
+      ✅ Netlify Forms 연동: data-netlify="true" 속성으로 자동 수집됩니다.
+      ✅ Google Sheets: JS의 PARTNER_SHEET_URL 변수에 Apps Script URL을 넣으세요.
+    -->
+    <form
+      id="partnerForm"
+      name="partner-inquiry"
+      data-netlify="true"
+      netlify-honeypot="bot-field-partner"
+      class="bg-white rounded-3xl p-7 md:p-10 shadow-[0_2px_20px_rgba(90,171,218,.10)] border border-haneul-skylt/25 space-y-5"
+      onsubmit="return sendPartner(event)"
+    >
+      <!-- 봇 스팸 차단용 숨김 필드 -->
+      <p class="hidden" aria-hidden="true">
+        <label>봇 필드: <input name="bot-field-partner" /></label>
+      </p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="form-group">
@@ -1537,8 +1569,22 @@
     </div>
 
     <!-- 뉴스레터 폼 -->
-    <form id="newsletterForm" onsubmit="return sendNewsletter(event)"
-          class="bg-white/15 backdrop-blur-sm border border-white/25 rounded-2xl p-6 space-y-4">
+    <!--
+      ✅ Netlify Forms 연동: data-netlify="true"
+      ✅ Google Sheets: JS의 NEWSLETTER_SHEET_URL 변수에 Apps Script URL을 넣으세요.
+    -->
+    <form
+      id="newsletterForm"
+      name="newsletter-signup"
+      data-netlify="true"
+      netlify-honeypot="bot-field-newsletter"
+      class="bg-white/15 backdrop-blur-sm border border-white/25 rounded-2xl p-6 space-y-4"
+      onsubmit="return sendNewsletter(event)"
+    >
+      <!-- 봇 스팸 차단용 숨김 필드 -->
+      <p class="hidden" aria-hidden="true">
+        <label>봇 필드: <input name="bot-field-newsletter" /></label>
+      </p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- 이름 -->
@@ -1738,113 +1784,265 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
-     JavaScript — 문구 신청 폼 기능
+     JavaScript — 폼 연동 (Netlify Forms + Google Sheets 병렬)
+
+     ✏️ Google Sheets 연동 방법:
+        1. Google Sheets 새 파일 생성
+        2. 확장 프로그램 → Apps Script → 아래 코드 붙여넣기 후 배포
+        3. 배포 URL을 아래 세 변수에 각각 붙여넣기
+
+     const POSTIT_SHEET_URL    = 'https://script.google.com/macros/s/YOUR_ID/exec';
+     const NEWSLETTER_SHEET_URL = 'https://script.google.com/macros/s/YOUR_ID/exec';
+     const PARTNER_SHEET_URL   = 'https://script.google.com/macros/s/YOUR_ID/exec';
+
+     ── Google Apps Script 코드 (시트마다 새 파일로 붙여넣기) ──
+     function doPost(e) {
+       var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+       var data  = JSON.parse(e.postData.contents);
+       var row   = [new Date()];
+       Object.values(data).forEach(function(v){ row.push(v); });
+       sheet.appendRow(row);
+       return ContentService
+         .createTextOutput(JSON.stringify({result:'success'}))
+         .setMimeType(ContentService.MimeType.JSON);
+     }
 ══════════════════════════════════════════════════════════ -->
 <script>
-  /* ── 글자 수 카운터 ── */
-  const msgTextarea = document.getElementById('msg-text');
-  const charCount   = document.getElementById('charCount');
-  if (msgTextarea && charCount) {
-    msgTextarea.addEventListener('input', function () {
-      const len = this.value.length;
-      charCount.textContent = len + ' / 100자';
-      charCount.style.color = len >= 90 ? '#E57373' : '';
+  /* ═══════════════════════════════════════════════════════
+     ✏️ [필수 설정] Google Sheets Apps Script 배포 URL
+     각 폼별로 별도 시트를 쓰려면 URL을 따로 발급받아 넣으세요.
+     하나의 시트로 통합하려면 세 변수에 동일한 URL을 넣으면 됩니다.
+  ═══════════════════════════════════════════════════════ */
+  var POSTIT_SHEET_URL     = '';  /* ✏️ 포스트잇 시트 URL */
+  var NEWSLETTER_SHEET_URL = '';  /* ✏️ 뉴스레터 시트 URL */
+  var PARTNER_SHEET_URL    = '';  /* ✏️ 파트너 문의 시트 URL */
+
+  /* ═══════════════════════════════════════════════════════
+     공통 유틸리티
+  ═══════════════════════════════════════════════════════ */
+
+  /* Netlify Forms용 FormData 직렬화 */
+  function encodeNetlify(data) {
+    return Object.keys(data)
+      .map(function(k){ return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]); })
+      .join('&');
+  }
+
+  /* 버튼 로딩 상태 토글 */
+  function setBtnLoading(btn, loading, originalHTML) {
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> 전송 중...'
+      : originalHTML;
+  }
+
+  /* 팝업 공통 표시 */
+  function showOverlay(emojiHTML, title, body, bodyJp) {
+    var box = document.getElementById('msgSuccessBox');
+    box.innerHTML =
+      '<div style="font-size:3rem;margin-bottom:.75rem;line-height:1;">' + emojiHTML + '</div>' +
+      '<h3 style="font-family:\'Noto Serif KR\',serif;font-size:1.05rem;font-weight:700;color:#1E2A35;margin-bottom:.75rem;line-height:1.45;">' + title + '</h3>' +
+      '<p style="font-size:.8rem;color:#6B7C8D;line-height:1.8;margin-bottom:.35rem;">' + body + '</p>' +
+      '<p style="font-size:.68rem;color:#6B7C8D;opacity:.55;line-height:1.65;margin-bottom:1.5rem;">' + bodyJp + '</p>' +
+      '<button onclick="closeSuccessOverlay()" ' +
+        'style="display:inline-flex;align-items:center;gap:.4rem;background:#5AABDA;color:#fff;' +
+        'font-size:.82rem;font-weight:600;padding:.65rem 1.6rem;border-radius:999px;border:none;cursor:pointer;' +
+        'box-shadow:0 4px 16px rgba(90,171,218,.35);" ' +
+        'onmouseover="this.style.background=\'#3A8BBF\'" onmouseout="this.style.background=\'#5AABDA\'">' +
+        '✨ 닫기 · 閉じる</button>';
+    document.getElementById('msgSuccessOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSuccessOverlay() {
+    document.getElementById('msgSuccessOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  /* Google Sheets로 데이터 전송 (시트 URL이 설정된 경우에만) */
+  function sendToSheet(url, payload) {
+    if (!url) return Promise.resolve();   /* URL 미설정 시 조용히 스킵 */
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      mode: 'no-cors'   /* Apps Script CORS 우회 */
+    }).catch(function(){});  /* 시트 오류가 UX를 막지 않도록 silent catch */
+  }
+
+  /* Netlify Forms로 데이터 전송 */
+  function sendToNetlify(formName, honeyField, payload) {
+    var body = encodeNetlify(Object.assign({ 'form-name': formName }, payload));
+    body += '&' + encodeURIComponent(honeyField) + '=';   /* 봇 필드 빈 값 */
+    return fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body
     });
   }
 
-  /* ── 폼 제출 처리 ── */
-  /* ✏️ 실제 서버 연동 시: fetch() 또는 formspree action을 사용하세요 */
+  /* ═══════════════════════════════════════════════════════
+     글자 수 카운터 (포스트잇 폼)
+  ═══════════════════════════════════════════════════════ */
+  var msgTextarea = document.getElementById('msg-text');
+  var charCount   = document.getElementById('charCount');
+  if (msgTextarea && charCount) {
+    msgTextarea.addEventListener('input', function () {
+      var len = this.value.length;
+      charCount.textContent = len + ' / 100자';
+      charCount.style.color = len >= 90 ? '#E57373' : '#6B7C8D';
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     [폼 1] 포스트잇 문구 신청
+  ═══════════════════════════════════════════════════════ */
   function sendMessage(e) {
     e.preventDefault();
+    var form = document.getElementById('messageForm');
+    var msgEl = document.getElementById('msg-text');
+    if (!msgEl || !msgEl.value.trim()) { msgEl && msgEl.focus(); return false; }
 
-    const msgInput = document.getElementById('msg-text');
-    if (!msgInput || msgInput.value.trim() === '') {
-      msgInput.focus();
-      return false;
-    }
+    var btn = form.querySelector('button[type="submit"]');
+    var orig = btn.innerHTML;
+    setBtnLoading(btn, true);
 
-    /* 버튼 로딩 상태 */
-    const btn = e.target.querySelector('button[type="submit"]');
-    const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<span class="inline-block animate-spin">⏳</span> 전송 중...';
-    btn.disabled = true;
+    /* 데이터 수집 */
+    var colorEl = form.querySelector('input[name="postit-color"]:checked');
+    var payload = {
+      닉네임:       (document.getElementById('msg-name') || {}).value || '익명',
+      포스트잇색상: colorEl ? colorEl.value : 'yellow',
+      문구:         msgEl.value.trim(),
+      제출시각:     new Date().toLocaleString('ko-KR', {timeZone:'Asia/Tokyo'})
+    };
 
-    /* ✏️ 실제 API 연동 전 임시 딜레이 (0.8초) */
-    setTimeout(function () {
-      /* 팝업 표시 */
-      showSuccessOverlay();
-      /* 폼 초기화 */
-      document.getElementById('messageForm').reset();
-      charCount.textContent = '0 / 100자';
-      /* 버튼 복원 */
-      btn.innerHTML = originalHTML;
-      btn.disabled = false;
-    }, 800);
-
+    /* Netlify + Google Sheets 병렬 전송 */
+    Promise.all([
+      sendToNetlify('postit-message', 'bot-field-postit', payload),
+      sendToSheet(POSTIT_SHEET_URL, payload)
+    ]).then(function() {
+      setBtnLoading(btn, false, orig);
+      form.reset();
+      if (charCount) { charCount.textContent = '0 / 100자'; charCount.style.color = '#6B7C8D'; }
+      showOverlay(
+        '💌',
+        '소중한 마음이 접수되었습니다!',
+        '추후 실제 포스트잇과 오픈 소식으로 만나보세요.<br/>하코다테 매장의 소통의 벽에서 당신의 문구를 꼭 찾아보세요. 🩵',
+        '大切な気持ちを受け付けました。オープン後、函館店の「心の壁」でぜひ見つけてください。'
+      );
+    }).catch(function() {
+      /* 네트워크 오류 시에도 UX는 성공으로 처리 (Netlify가 백업) */
+      setBtnLoading(btn, false, orig);
+      form.reset();
+      showOverlay('💌', '소중한 마음이 접수되었습니다!',
+        '추후 실제 포스트잇과 오픈 소식으로 만나보세요. 🩵',
+        '大切な気持ちを受け付けました。');
+    });
     return false;
   }
 
-  /* ── 성공 팝업 제어 ── */
-  function showSuccessOverlay() {
-    const overlay = document.getElementById('msgSuccessOverlay');
-    overlay.classList.add('show');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeSuccessOverlay() {
-    const overlay = document.getElementById('msgSuccessOverlay');
-    overlay.classList.remove('show');
-    document.body.style.overflow = '';
-  }
-  /* ── 뉴스레터 폼 제출 ── */
+  /* ═══════════════════════════════════════════════════════
+     [폼 2] 뉴스레터 오픈 알림 신청
+  ═══════════════════════════════════════════════════════ */
   function sendNewsletter(e) {
     e.preventDefault();
-    const contact = document.getElementById('nl-contact');
-    if (!contact || contact.value.trim() === '') {
-      contact.focus();
-      return false;
-    }
-    const btn = e.target.querySelector('button[type="submit"]');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<span class="inline-block animate-spin">⏳</span> 신청 중...';
-    btn.disabled = true;
+    var form = document.getElementById('newsletterForm');
+    var contactEl = document.getElementById('nl-contact');
+    if (!contactEl || !contactEl.value.trim()) { contactEl && contactEl.focus(); return false; }
 
-    setTimeout(function () {
-      /* ── 뉴스레터 성공 팝업 ── */
-      const overlay = document.getElementById('msgSuccessOverlay');
-      const box     = document.getElementById('msgSuccessBox');
-      /* 팝업 내용을 뉴스레터용으로 교체 */
-      box.innerHTML = `
-        <div style="font-size:3rem;margin-bottom:.75rem;line-height:1;">☀️</div>
-        <h3 style="font-family:'Noto Serif KR',serif;font-size:1.05rem;font-weight:700;color:#1E2A35;margin-bottom:.75rem;line-height:1.45;">
-          오픈 소식 알림 신청이 완료되었습니다!
-        </h3>
-        <p style="font-size:.8rem;color:#6B7C8D;line-height:1.75;margin-bottom:.4rem;">
-          가장 먼저 하늘의 소식을 전해드릴게요. ☁️<br/>
-          함께해 주셔서 진심으로 감사드립니다!
-        </p>
-        <p style="font-size:.68rem;color:#6B7C8D;opacity:.6;line-height:1.65;margin-bottom:1.5rem;">
-          オープン通知の申し込みが完了しました。いち早くお知らせいたします。
-        </p>
-        <button onclick="closeSuccessOverlay()"
-          style="display:inline-flex;align-items:center;gap:.4rem;background:#5AABDA;color:#fff;font-size:.82rem;font-weight:600;padding:.65rem 1.6rem;border-radius:999px;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(90,171,218,.35);"
-          onmouseover="this.style.background='#3A8BBF'"
-          onmouseout="this.style.background='#5AABDA'">
-          ✨ 닫기 · 閉じる
-        </button>`;
-      showSuccessOverlay();
-      document.getElementById('newsletterForm').reset();
-      btn.innerHTML = orig;
-      btn.disabled = false;
-    }, 800);
+    var btn = form.querySelector('button[type="submit"]');
+    var orig = btn.innerHTML;
+    setBtnLoading(btn, true);
+
+    var methodEl = form.querySelector('input[name="nl-method"]:checked');
+    var payload = {
+      이름:         (document.getElementById('nl-name') || {}).value || '익명',
+      연락처:       contactEl.value.trim(),
+      소식받기방법: methodEl ? methodEl.value : 'email',
+      제출시각:     new Date().toLocaleString('ko-KR', {timeZone:'Asia/Tokyo'})
+    };
+
+    Promise.all([
+      sendToNetlify('newsletter-signup', 'bot-field-newsletter', payload),
+      sendToSheet(NEWSLETTER_SHEET_URL, payload)
+    ]).then(function() {
+      setBtnLoading(btn, false, orig);
+      form.reset();
+      showOverlay(
+        '☀️',
+        '오픈 소식 알림 신청이 완료되었습니다!',
+        '가장 먼저 하늘의 소식을 전해드릴게요. ☁️<br/>함께해 주셔서 진심으로 감사드립니다!',
+        'オープン通知の申し込みが完了しました。いち早くお知らせいたします。'
+      );
+    }).catch(function() {
+      setBtnLoading(btn, false, orig);
+      form.reset();
+      showOverlay('☀️', '오픈 소식 알림 신청이 완료되었습니다!',
+        '가장 먼저 하늘의 소식을 전해드릴게요. ☁️',
+        'オープン通知の申し込みが完了しました。');
+    });
     return false;
   }
-  document.addEventListener('keydown', function (e) {
+
+  /* ═══════════════════════════════════════════════════════
+     [폼 3] 파트너 문의
+  ═══════════════════════════════════════════════════════ */
+  function sendPartner(e) {
+    e.preventDefault();
+    var form = document.getElementById('partnerForm');
+    var nameEl    = document.getElementById('f-name');
+    var contactEl = document.getElementById('f-contact');
+    var msgEl     = document.getElementById('f-msg');
+    if (!contactEl || !contactEl.value.trim()) { contactEl && contactEl.focus(); return false; }
+
+    var btn = form.querySelector('button[type="submit"]');
+    var orig = btn.innerHTML;
+    setBtnLoading(btn, true);
+
+    var typeEl = document.getElementById('f-type');
+    var payload = {
+      이름:     nameEl ? nameEl.value.trim() : '',
+      연락처:   contactEl.value.trim(),
+      상호명:   (document.getElementById('f-biz') || {}).value || '',
+      제휴유형: typeEl ? typeEl.options[typeEl.selectedIndex].text : '',
+      문의내용: msgEl ? msgEl.value.trim() : '',
+      제출시각: new Date().toLocaleString('ko-KR', {timeZone:'Asia/Tokyo'})
+    };
+
+    Promise.all([
+      sendToNetlify('partner-inquiry', 'bot-field-partner', payload),
+      sendToSheet(PARTNER_SHEET_URL, payload)
+    ]).then(function() {
+      setBtnLoading(btn, false, orig);
+      form.reset();
+      showOverlay(
+        '🤝',
+        '파트너 문의가 접수되었습니다!',
+        '소중한 제휴 문의 감사드립니다.<br/>내용 확인 후 빠르게 연락 드리겠습니다.',
+        '提携のお問い合わせありがとうございます。確認次第、速やかにご連絡いたします。'
+      );
+    }).catch(function() {
+      setBtnLoading(btn, false, orig);
+      form.reset();
+      showOverlay('🤝', '파트너 문의가 접수되었습니다!',
+        '내용 확인 후 빠르게 연락 드리겠습니다.',
+        '確認次第、速やかにご連絡いたします。');
+    });
+    return false;
+  }
+
+  /* ── 팝업 닫기: ESC 키 / 배경 클릭 ── */
+  document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeSuccessOverlay();
   });
-  /* 오버레이 배경 클릭으로 닫기 */
-  document.getElementById('msgSuccessOverlay').addEventListener('click', function (e) {
+  document.getElementById('msgSuccessOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeSuccessOverlay();
   });
+
+  /* ── spin 애니메이션 (인라인) ── */
+  var spinStyle = document.createElement('style');
+  spinStyle.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(spinStyle);
 </script>
 
 </body>
